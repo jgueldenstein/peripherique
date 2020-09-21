@@ -43,9 +43,25 @@ int main(void)
 	// Lancement chronomètre
 	Chrono_Start(); 
   
+	
+	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+	
+	GPIOC->CRH &= ~GPIO_CRH_CNF8_1;
+	GPIOC->CRH |= GPIO_CRH_CNF8_0; // set cnf to 01 -> floating input
+	GPIOC->CRH &= ~GPIO_CRH_MODE8; // set mode to 00 -> input
+	
+	GPIOC->CRH &= ~GPIO_CRH_CNF10; // set cnf to 00 -> push-pull
+	GPIOC->CRH &= ~GPIO_CRH_MODE10;
+	GPIOC->CRH |= GPIO_CRH_MODE10_1; // set mode to 10 -> output at 2 mhz (recommended to use minimum speed)
+
   /* Infinite loop */
   while (1)
   {
+		if(GPIOC->IDR & GPIO_IDR_IDR8){
+			GPIOC->ODR |= GPIO_ODR_ODR10;
+		} else {
+			GPIOC->ODR &= ~GPIO_ODR_ODR10;
+		}
   }
 }
 
