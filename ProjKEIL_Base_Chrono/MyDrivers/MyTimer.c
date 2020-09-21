@@ -12,8 +12,13 @@
 */ 
 #include "stm32f103xb.h" 
 #include "MyTimer.h"
+#include <stdlib.h>
+#include <stdio.h>
 
+ void (*Ptr_Fct_TIM1) (void);
  void (*Ptr_Fct_TIM2) (void);
+ void (*Ptr_Fct_TIM3) (void);
+ void (*Ptr_Fct_TIM4) (void);
 
 /**
 	* @brief  Active l'horloge et règle l'ARR et le PSC du timer visé
@@ -25,7 +30,16 @@
   */
 void MyTimer_Conf(TIM_TypeDef * Timer, uint16_t Arr, uint16_t Psc)
 {
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+	if (Timer == TIM1){
+		RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+	}else if (Timer == TIM2){
+		RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+	}else if(Timer == TIM3){
+		RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+	}else if(Timer == TIM4){
+		RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
+	}
+	
 	Timer->ARR = Arr;
 	Timer->PSC = Psc;
 }
@@ -65,9 +79,22 @@ void MyTimer_Stop(TIM_TypeDef * Timer)
   */
 void MyTimer_IT_Conf(TIM_TypeDef * Timer, void (*IT_function) (void),int Prio)
 {
-	NVIC_SetPriority(TIM2_IRQn,Prio);
+	//NVIC_SetPriority(TIM2_IRQn,Prio);
+	if (Timer == TIM1){
+		NVIC->IP[TIM1_UP_IRQn] |= (Prio << 4);
+		Ptr_Fct_TIM1 = IT_function;
+	}else if (Timer == TIM2){
+		NVIC->IP[TIM2_IRQn] |= (Prio << 4);
+		Ptr_Fct_TIM2 = IT_function;
+	}else if(Timer == TIM3){
+		NVIC->IP[TIM3_IRQn] |= (Prio << 4);
+		Ptr_Fct_TIM3 = IT_function;
+	}else if(Timer == TIM4){
+		NVIC->IP[TIM4_IRQn] |= (Prio << 4);
+		Ptr_Fct_TIM4 = IT_function;
+	}
 	
-	Ptr_Fct_TIM2 = IT_function;
+	
 }
 
 
@@ -78,9 +105,19 @@ void MyTimer_IT_Conf(TIM_TypeDef * Timer, void (*IT_function) (void),int Prio)
   * @retval None
   */
 void MyTimer_IT_Enable(TIM_TypeDef * Timer){
+	
 	Timer->DIER |= TIM_DIER_UIE;
-	NVIC_EnableIRQ(TIM2_IRQn);
-	//NVIC->ISER[0] |= (1<<28);
+	//NVIC_EnableIRQ(TIM2_IRQn);
+	if (Timer == TIM1){
+		NVIC->ISER[0] |= (1<<TIM1_UP_IRQn);
+	}else if (Timer == TIM2){
+		NVIC->ISER[0] |= (1<<TIM2_IRQn);
+	}else if(Timer == TIM3){
+		NVIC->ISER[0] |= (1<<TIM3_IRQn);
+	}else if(Timer == TIM4){
+		NVIC->ISER[0] |= (1<<TIM4_IRQn);
+	}
+	
 }	
 
 
@@ -92,9 +129,29 @@ void MyTimer_IT_Enable(TIM_TypeDef * Timer){
   */
 void MyTimer_IT_Disable(TIM_TypeDef * Timer);
 
+
+
+void TIM1_UP_IRQHandler(void)
+{
+	TIM1->SR &= ~TIM_SR_UIF;
+	Ptr_Fct_TIM1();
+}
+
 void TIM2_IRQHandler(void)
 {
 	TIM2->SR &= ~TIM_SR_UIF;
 	Ptr_Fct_TIM2();
+}
+
+void TIM3_IRQHandler(void)
+{
+	TIM3->SR &= ~TIM_SR_UIF;
+	Ptr_Fct_TIM3();
+}
+
+void TIM4_IRQHandler(void)
+{
+	TIM4->SR &= ~TIM_SR_UIF;
+	Ptr_Fct_TIM4();
 }
 
