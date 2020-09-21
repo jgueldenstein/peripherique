@@ -83,15 +83,20 @@ void MyTimer_IT_Conf(TIM_TypeDef * Timer, void (*IT_function) (void),int Prio)
 	if (Timer == TIM1){
 		NVIC->IP[TIM1_UP_IRQn] |= (Prio << 4);
 		Ptr_Fct_TIM1 = IT_function;
+	NVIC->ISER[0] |= (1<<TIM1_UP_IRQn);
 	}else if (Timer == TIM2){
 		NVIC->IP[TIM2_IRQn] |= (Prio << 4);
 		Ptr_Fct_TIM2 = IT_function;
+	//NVIC_EnableIRQ(TIM2_IRQn);	
+	NVIC->ISER[0] |= (1<<TIM2_IRQn);
 	}else if(Timer == TIM3){
 		NVIC->IP[TIM3_IRQn] |= (Prio << 4);
 		Ptr_Fct_TIM3 = IT_function;
+	NVIC->ISER[0] |= (1<<TIM3_IRQn);
 	}else if(Timer == TIM4){
 		NVIC->IP[TIM4_IRQn] |= (Prio << 4);
 		Ptr_Fct_TIM4 = IT_function;
+	NVIC->ISER[0] |= (1<<TIM4_IRQn);
 	}
 	
 	
@@ -107,16 +112,6 @@ void MyTimer_IT_Conf(TIM_TypeDef * Timer, void (*IT_function) (void),int Prio)
 void MyTimer_IT_Enable(TIM_TypeDef * Timer){
 	
 	Timer->DIER |= TIM_DIER_UIE;
-	//NVIC_EnableIRQ(TIM2_IRQn);
-	if (Timer == TIM1){
-		NVIC->ISER[0] |= (1<<TIM1_UP_IRQn);
-	}else if (Timer == TIM2){
-		NVIC->ISER[0] |= (1<<TIM2_IRQn);
-	}else if(Timer == TIM3){
-		NVIC->ISER[0] |= (1<<TIM3_IRQn);
-	}else if(Timer == TIM4){
-		NVIC->ISER[0] |= (1<<TIM4_IRQn);
-	}
 	
 }	
 
@@ -127,7 +122,9 @@ void MyTimer_IT_Enable(TIM_TypeDef * Timer){
 	* @param  TIM_TypeDef Timer : indique le timer à utiliser par le chronomètre, TIM1, TIM2, TIM3 ou TIM4
   * @retval None
   */
-void MyTimer_IT_Disable(TIM_TypeDef * Timer);
+void MyTimer_IT_Disable(TIM_TypeDef * Timer){
+	Timer->DIER &= ~(TIM_DIER_UIE);
+}
 
 
 
