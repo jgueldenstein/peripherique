@@ -51,6 +51,7 @@ int main(void)
 	GPIOC->CRH &= ~GPIO_CRH_MODE8; // set mode to 00 -> input
 	
 	GPIOC->CRH &= ~GPIO_CRH_CNF10; // set cnf to 00 -> push-pull
+	GPIOC->CRH |= GPIO_CRH_CNF10_0; // set cnf to 01 -> open-drain
 	GPIOC->CRH &= ~GPIO_CRH_MODE10;
 	GPIOC->CRH |= GPIO_CRH_MODE10_1; // set mode to 10 -> output at 2 mhz (recommended to use minimum speed)
 
