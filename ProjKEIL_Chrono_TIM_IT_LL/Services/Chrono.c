@@ -10,9 +10,11 @@ Utilise la lib MyTimers.h /.c
 
 #include "Chrono.h"
 #include "MyTimer.h"
+#include "MyUart.h"
 #include "stm32f1xx_ll_gpio.h" 
 #include "stm32f1xx_ll_bus.h"
 #include "stm32f1xx_ll_utils.h"
+#include "stm32f1xx_ll_usart.h"
 
 // variable privée de type Time qui mémorise la durée mesurée
 static Time Chrono_Time; // rem : static rend la visibilité de la variable Chrono_Time limitée à ce fichier 
@@ -20,12 +22,15 @@ static Time Chrono_Time; // rem : static rend la visibilité de la variable Chron
 // variable privée qui mémorise pour le module le timer utilisé par le module
 static TIM_TypeDef * Chrono_Timer=TIM1; // init par défaut au cas où l'utilisateur ne lance pas Chrono_Conf avant toute autre fct.
 
+static USART_TypeDef * uart_port=USART2;
 // déclaration callback appelé toute les 10ms
 void Chrono_Task_10ms(void);
 
 int running = 0;
 int was_zero = 0;
+int send_data = 0;
 
+char buf[30];
 /**
 	* @brief  Configure le chronomètre. 
   * @note   A lancer avant toute autre fonction.
@@ -46,12 +51,13 @@ void Chrono_Conf(TIM_TypeDef * Timer)
 	// Réglage Timer pour un débordement à 10ms
 	MyTimer_Conf(Chrono_Timer,999, 719);
 	
+	MyUart_Conf(uart_port, 115200);
+	
 	// Réglage interruption du Timer avec callback : Chrono_Task_10ms()
 	MyTimer_IT_Conf(Chrono_Timer, Chrono_Task_10ms,3);
 	
 	// Validation IT
 	MyTimer_IT_Enable(Chrono_Timer);
-	
 	
 }
 
@@ -142,6 +148,7 @@ void Chrono_Task_10ms(void)
 	} else {
 		LL_GPIO_ResetOutputPin(GPIOC,LL_GPIO_PIN_10);
 	}
+	send_data = 1;
 	
 }
 
@@ -191,4 +198,39 @@ void Chrono_Background(void){
 	if(!(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_13))) { // negative logic for blue button
 		Chrono_Reset();
 	}
+}
+
+void Chrono_Send_Data_If_Available(void){
+	if (!send_data) return;
+	int len = Chrono_Format_Time(Chrono_Time, buf);
+	MyUart_send_bytes(uart_port, buf, len);
+	send_data = 0;
+}
+int Chrono_Format_Time(Time t, char buf[]) {
+	
+	int min = t.Min%100;
+	int sec = t.Sec;
+	int hund = t.Hund;
+	
+	
+	buf[1] = 0x30+(min%10);
+	min /=10;
+	buf[0] = 0x30+(min%10);
+	
+	buf[2] = ':';
+	
+	buf[4] = 0x30+(sec%10);
+	sec /=10;
+	buf[3] = 0x30+(sec%10);
+	
+	buf[5] = ':';
+	
+	buf[7] = 0x30+(hund%10);
+	hund /=10;
+	buf[6] = 0x30+(hund%10);
+	
+	buf[8] = '\r';
+	
+	return 9;
+	
 }

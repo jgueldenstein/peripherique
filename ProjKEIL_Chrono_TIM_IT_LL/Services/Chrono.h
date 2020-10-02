@@ -104,4 +104,6 @@ Time * Chrono_Read(void);
 void Chrono_Conf_io(void);
 
 void Chrono_Background(void);
+void Chrono_Send_Data_If_Available(void);
+int Chrono_Format_Time(Time t, char buf[]);
 #endif
