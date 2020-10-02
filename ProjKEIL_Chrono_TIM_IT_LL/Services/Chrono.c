@@ -12,6 +12,7 @@ Utilise la lib MyTimers.h /.c
 #include "MyTimer.h"
 #include "stm32f1xx_ll_gpio.h" 
 #include "stm32f1xx_ll_bus.h"
+#include "stm32f1xx_ll_utils.h"
 
 // variable privée de type Time qui mémorise la durée mesurée
 static Time Chrono_Time; // rem : static rend la visibilité de la variable Chrono_Time limitée à ce fichier 
@@ -23,6 +24,7 @@ static TIM_TypeDef * Chrono_Timer=TIM1; // init par défaut au cas où l'utilisate
 void Chrono_Task_10ms(void);
 
 int running = 0;
+int was_zero = 0;
 
 /**
 	* @brief  Configure le chronomètre. 
@@ -170,11 +172,21 @@ void Chrono_Conf_io(void) {
 
 void Chrono_Background(void){
 	if(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_8)) {
-		if(running) {
-			Chrono_Stop();
-		} else {
-			Chrono_Start();
-		}
+			if (was_zero) {
+				LL_mDelay(2);
+				if(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_8)) {
+					if(running) {
+						Chrono_Stop();
+					} else {
+						Chrono_Start();
+					}
+				}
+			}
+			was_zero = 0;
+	}
+	else
+	{
+		was_zero = 1;
 	}
 	if(!(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_13))) { // negative logic for blue button
 		Chrono_Reset();
