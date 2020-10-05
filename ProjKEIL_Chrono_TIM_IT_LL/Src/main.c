@@ -61,6 +61,7 @@ int main(void)
   while (1)
   {
 		Chrono_Background();
+		Chrono_Send_Data_If_Available();
   }
 }
 

@@ -51,7 +51,7 @@ void Chrono_Conf(TIM_TypeDef * Timer)
 	// Réglage Timer pour un débordement à 10ms
 	MyTimer_Conf(Chrono_Timer,999, 719);
 	
-	MyUart_Conf(uart_port, 115200);
+	MyUart_Conf(uart_port, 19200);
 	
 	// Réglage interruption du Timer avec callback : Chrono_Task_10ms()
 	MyTimer_IT_Conf(Chrono_Timer, Chrono_Task_10ms,3);
@@ -97,12 +97,13 @@ void Chrono_Stop(void)
 void Chrono_Reset(void)
 {
   // Arrêt Chrono
-	MyTimer_Stop(Chrono_Timer);
+	Chrono_Stop();
 
 	// Reset Time
 	Chrono_Time.Hund=0;
 	Chrono_Time.Sec=0;
 	Chrono_Time.Min=0;
+	send_data = 1;
 }
 
 
@@ -143,7 +144,7 @@ void Chrono_Task_10ms(void)
 	{
 		Chrono_Time.Hund=0;
 	}
-	if ( Chrono_Time.Sec % 2) {
+	if (Chrono_Time.Sec % 2) {
 		LL_GPIO_SetOutputPin(GPIOC,LL_GPIO_PIN_10);
 	} else {
 		LL_GPIO_ResetOutputPin(GPIOC,LL_GPIO_PIN_10);
